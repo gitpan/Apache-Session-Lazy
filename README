@@ -2,11 +2,17 @@ Apache/Session/Lazy version 0.01
 ================================
 
 This is Apache::Session::Lazy.
+It is an extension of Apache::Session.
 
-It is used to open Sessions only after they are either modified or examined.  It is usefull for
-when a programmer wants to automatically open a session at the beggining of a process, but doesn't
-want to waste disk space or retrieval time, unless the session is actually used (there are
-probably other uses.)
+Apache::Session is a persistence framework which is particularly useful
+for tracking session data between httpd requests.  Apache::Session is
+designed to work with Apache and mod_perl, but it should work under
+CGI and other web servers, and it also works outside of a web server
+altogether.
+
+Apache::Session::Lazy extends Apache::Session by opening Sessions only after they are either
+modified or examined (first read or write access to the tied hash.)  It should provide
+transparent access to the session hash at all times.
 
 INSTALLATION
 

@@ -1,6 +1,7 @@
 Revision history for Perl extension Apache::Session::Lazy.
 
-0.01  Sat Jan  4 17:23:11 2003
-	- original version; created by h2xs 1.21 with options
-		-AX Apache::Session::Lazy
+0.02  Sun Jan  5 07:26:29 2003
+	- Updated documentation.
 
+0.01  Sat Jan  4 17:23:11 2003
+	- original version;

@@ -2,7 +2,7 @@ package Apache::Session::Lazy;
 use 5.006;
 use strict;
 use warnings;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # Thanks for the perltie info, Merlyn.
 
@@ -63,35 +63,63 @@ __END__
 
 =head1 NAME
 
-Apache::Session::Lazy - Perl extension for opening Apache:Sessions when needed.
+Apache::Session::Lazy - Perl extension for opening Apache::Sessions on first read/write access.
 
 =head1 SYNOPSIS
 
-  use Apache::Session::Lazy;
-  my %session;
-  
-  #make a fresh session for a first-time visitor
-  tie %session, 'Apache::Session::Lazy', 'Apache::Session::MySQL';
-
+See L<Apache::Session>
 
 =head1 DESCRIPTION
 
-Module is used to open Sessions only after they are either modified or examined.  Usefull for
-when a programmer wants to automatically open a session at the beggining of a process, but doesn't
-want to waste disk space or retrieval time, unless the session is actually used.
+=head2 The Module
+
+Apache::Session is a persistence framework which is particularly useful
+for tracking session data between httpd requests.  Apache::Session is
+designed to work with Apache and mod_perl, but it should work under
+CGI and other web servers, and it also works outside of a web server
+altogether.
+
+Apache::Session::Lazy extends Apache::Session by opening Sessions only after they are either
+modified or examined (first read or write access to the tied hash.)  It should provide
+transparent access to the session hash at all times.
+
+=head2 Uses Of Apache::Session::Lazy
+
+Apache::Session::Lazy was designed to allow Apache::Session to achieve two objectives:
+
+a) Prevent unnecessary work in accessing the data store, if a session is not going to be touched.
+
+b) Allow for session locking to exist for the least possible amount of time, so that other
+access to the same session is possible.
 
 Just add 'Apache::Session::Lazy' after tie %session, and before the interface
 you want to use.  Easy as that.  From that day on: It won't open the session until you mess with
 them.
 
+=head1 INTERFACE
+
+The interface for Apache::Session::Lazy is only different for tieing the Session.  You must
+an additional parameter after tie %session. So the new tie will look like-
+
+Get a new session using DBI:
+
+ tie %session, 'Apache::Session::Lazy', 'Apache::Session::MySQL', undef,
+    { DataSource => 'dbi:mysql:sessions' };
+    
+Restore an old session from the database:
+
+ tie %session, 'Apache::Session::Lazy', 'Apache::Session::MySQL', $session_id,
+    { DataSource => 'dbi:mysql:sessions' };
 
 =head1 AUTHOR
 
-Gyan Kapur <lt>gkapur@inboxusa.com<gt>
+Gyan Kapur <gkapur@inboxusa.com>
+
 With help from merlyn.
 
 =head1 SEE ALSO
 
-L<perl>.
+L<Apache::Session>,L<Apache::SessionX>, 
+http://groups.yahoo.com/group/modperl/message/46287
 
 =cut
