@@ -1,0 +1,32 @@
+Apache/Session/Lazy version 0.01
+================================
+
+This is Apache::Session::Lazy.
+
+It is used to open Sessions only after they are either modified or examined.  It is usefull for
+when a programmer wants to automatically open a session at the beggining of a process, but doesn't
+want to waste disk space or retrieval time, unless the session is actually used (there are
+probably other uses.)
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries in order to be useful:
+
+  Apache::Session
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2003 Gyan Kapur
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself. 
+
