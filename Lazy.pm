@@ -2,65 +2,80 @@ package Apache::Session::Lazy;
 use 5.006;
 use strict;
 use warnings;
-our $VERSION = '0.03';
+our $VERSION = '0.05';
 
 # Thanks for the perltie info, Merlyn.
 
 sub TIEHASH {
   my $class = shift;
-  eval "require $_[0]";
+  return unless checks(@_);
 
   if ( $@ ) {      # whoops, there was an error
       warn( $@ );  # require'ing $class; perhaps
       return;      # it doesn't exist?
   }
 
+  if ( ( caller(1) )[3] eq '(eval)' && defined $_[1]) { # The assumption is
+      my $object = $_[0]->TIEHASH( $_[1..$#_] );        # that you are checking
+      $object->DESTROY();                               # to see if a session
+  }                                                     # exists.
+  
   bless [@_], $class; # remember real args
 }
 
 sub FETCH {
   ## DO NOT USE shift HERE
   $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
-  $_[0]->FETCH($_[1]);
+  goto &{$_[0]->can("FETCH")};
 }
 
 sub STORE {
   ## DO NOT USE shift HERE
   $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
-  $_[0]->STORE($_[1], $_[2]);
+  goto &{$_[0]->can("STORE")};
 }
 
 sub DELETE   {
   $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
-  $_[0]->DELETE($_[1]);
+  goto &{$_[0]->can("DELETE")};
 }
 
 sub CLEAR {
 
   if ( defined $_[0]->[1] && $_[0]->[1] ) {  # Why Clear An Uncreated Sesion?
     $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
-    $_[0]->CLEAR();
+    goto &{$_[0]->can("CLEAR")};
   }
 
 }
 
 sub EXISTS {
   $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
-  $_[0]->EXISTS($_[1]);
+  goto &{$_[0]->can("EXISTS")};
 }
 
 sub FIRSTKEY {
   $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
-  $_[0]->FIRSTKEY();
+  goto &{$_[0]->can("FIRSTKEY")};
 }
 
 sub NEXTKEY {
   $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
-  $_[0]->NEXTKEY();
+  goto &{$_[0]->can("NEXTKEY")};
 }
 
 sub DESTROY {
-    # Why destroy something we haven't created?
+
+  if ( defined $_[0]->[1] && $_[0]->[1] ) {  # Why Destroy An Uncreated Sesion?
+    $_[0] = delete($_[0]->[0])->TIEHASH(@{$_[0]});
+    goto &{$_[0]->can("DESTROY")};
+  }
+
+}
+
+sub checks {
+  eval "require $_[0]";  # You can overload this.
+  !$@;
 }
 
 1;
@@ -91,16 +106,9 @@ transparent access to the session hash at all times.
 
 =head2 Uses Of Apache::Session::Lazy
 
-Apache::Session::Lazy was designed to allow Apache::Session to achieve two objectives:
-
-a) Prevent unnecessary work in accessing the data store, if a session is not going to be touched.
-
-b) Allow for session locking to exist for the least possible amount of time, so that other
-access to the same session is possible.
-
-Just add 'Apache::Session::Lazy' after tie %session, and before the interface
-you want to use.  Easy as that.  From that day on: It won't open the session until you mess with
-them.
+Apache::Session::Lazy was designed to allow Apache::Session to achieve prevent unnecessary work
+in accessing the data store, if a session is not going to be touched, and allow for session locking
+to exist for the least possible amount of time, so that other access to the same session is possible.
 
 =head1 INTERFACE
 
@@ -116,6 +124,35 @@ Restore an old session from the database:
 
  tie %session, 'Apache::Session::Lazy', 'Apache::Session::MySQL', $session_id,
     { DataSource => 'dbi:mysql:sessions' };
+
+Check for a session:
+
+ eval {  
+   tie %session, 'Apache::Session::Lazy', 'Apache::Session::MySQL', $session_id,
+      { DataSource => 'dbi:mysql:sessions' };
+ };
+
+=head2 SUBCLASSING
+
+You can now subclass Apache::Session::Lazy.  This allows you to force users to use only one of the
+Apache::Session interfaces by use()-ing that module, and overiding the checks subroutine:
+
+ package My::Apache::Session::Lazy;
+ use Apache::Session::Flex;
+ use Apache::Session::Lazy;
+ @My::Apache::Session::Lazy::ISA = Apache::Session::Lazy;
+
+ sub checks { # This holds the parameters to be passed to Apache::Session.
+   unless ( $_[0] =~ m/Apache::Session::Flex/i ) {
+     die ('Please just flex it.');
+   } elsif ( $_[2]->{'Generate'} ne 'ModUniqueId' ) {
+     die ('Use UniqueId, it is the j33test.');
+   } else {
+     return 1;
+   }
+
+   return; # Just in case they're catching dies.
+ }
 
 =head1 AUTHOR
 
