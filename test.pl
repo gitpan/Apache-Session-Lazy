@@ -8,6 +8,7 @@
 use Test;
 BEGIN { plan tests => 1 };
 use Apache::Session::Lazy;
+use Apache::Session;
 ok(1); # If we made it this far, we're ok.
 
 #########################

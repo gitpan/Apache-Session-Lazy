@@ -2,13 +2,19 @@ package Apache::Session::Lazy;
 use 5.006;
 use strict;
 use warnings;
-our $VERSION = '0.02';
+our $VERSION = '0.04';
 
 # Thanks for the perltie info, Merlyn.
 
 sub TIEHASH {
   my $class = shift;
-  require $_[0];
+  eval "require $_[0]";
+
+  if ( $@ ) {      # whoops, there was an error
+      warn( $@ );  # require'ing $class; perhaps
+      return;      # it doesn't exist?
+  }
+
   bless [@_], $class; # remember real args
 }
 
