@@ -2,7 +2,7 @@ package Apache::Session::Lazy;
 use 5.006;
 use strict;
 use warnings;
-our $VERSION = '0.04';
+our $VERSION = '0.03';
 
 # Thanks for the perltie info, Merlyn.
 

@@ -1,8 +1,5 @@
 Revision history for Perl extension Apache::Session::Lazy.
 
-0.04  Sun Jan  5 11:46:23 2003
-	- Made version numbers all the same :P
-
 0.03  Sun Jan  5 11:46:23 2003
 	- Fixed stupid require error.
         - Added test for Apache::Session.
